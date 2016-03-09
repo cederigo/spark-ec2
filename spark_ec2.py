@@ -791,6 +791,20 @@ def get_existing_cluster(conn, opts, cluster_name, die_on_error=True):
 # or started EC2 cluster.
 def setup_cluster(conn, master_nodes, slave_nodes, opts, deploy_ssh_key):
     master = get_dns_name(master_nodes[0], opts.private_ips)
+
+    if opts.user != "root":
+        command = """
+          sudo cp /home/{}/.ssh/authorized_keys /root/.ssh/ &&
+          sudo sed -i 's/PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config &&
+          sudo service sshd reload
+        """.format(opts.user)
+        ssh(master, opts, command)
+        for slave in slave_nodes:
+            slave_address = get_dns_name(slave, opts.private_ips)
+            ssh(slave_address, opts, command)
+        print('changed user to root')
+        opts.user = "root"
+ 
     if deploy_ssh_key:
         print("Generating cluster's SSH key on master...")
         key_setup = """
@@ -827,6 +841,8 @@ def setup_cluster(conn, master_nodes, slave_nodes, opts, deploy_ssh_key):
         host=master,
         opts=opts,
         command="rm -rf spark-ec2"
+        + " && "
+        + "sudo yum install -y -q git"
         + " && "
         + "git clone {r} -b {b} spark-ec2".format(r=opts.spark_ec2_git_repo,
                                                   b=opts.spark_ec2_git_branch)
