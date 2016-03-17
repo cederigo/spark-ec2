@@ -291,6 +291,10 @@ def parse_args():
         help="Number of instances per worker: variable SPARK_WORKER_INSTANCES. Not used if YARN " +
              "is used as Hadoop major version (default: %default)")
     parser.add_option(
+        "--worker-cores", type="int", default=0,
+        help="Total number of cores to allow Spark applications to use on the machine. variable: SPARK_WORKER_CORES. " +
+             "(default: All available cores)")
+    parser.add_option(
         "--master-opts", type="string", default="",
         help="Extra options to give to master through SPARK_MASTER_OPTS variable " +
              "(e.g -Dspark.worker.timeout=180)")
@@ -1079,6 +1083,7 @@ def deploy_files(conn, root_dir, opts, master_nodes, slave_nodes, modules):
     master_addresses = [get_dns_name(i, opts.private_ips) for i in master_nodes]
     slave_addresses = [get_dns_name(i, opts.private_ips) for i in slave_nodes]
     worker_instances_str = "%d" % opts.worker_instances if opts.worker_instances else ""
+    worker_cores_str = "%d" % opts.worker_cores if opts.worker_cores else ""
     template_vars = {
         "master_list": '\n'.join(master_addresses),
         "active_master": active_master,
@@ -1093,6 +1098,7 @@ def deploy_files(conn, root_dir, opts, master_nodes, slave_nodes, modules):
         "tachyon_version": tachyon_v,
         "hadoop_major_version": opts.hadoop_major_version,
         "spark_worker_instances": worker_instances_str,
+        "spark_worker_cores": worker_cores_str,
         "spark_master_opts": opts.master_opts
     }
 

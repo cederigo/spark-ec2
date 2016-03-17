@@ -59,6 +59,9 @@ if os.getenv("SPARK_WORKER_INSTANCES") != "":
   # Distribute equally cpu cores among worker instances
   worker_cores = max(slave_cpus / worker_instances, 1)
 
+if os.getenv("SPARK_WORKER_CORES") != "":
+  worker_cores = int(os.getenv("SPARK_WORKER_CORES"))
+
 template_vars = {
   "master_list": os.getenv("MASTERS"),
   "active_master": os.getenv("MASTERS").split("\n")[0],
