@@ -797,6 +797,7 @@ def setup_cluster(conn, master_nodes, slave_nodes, opts, deploy_ssh_key):
     master = get_dns_name(master_nodes[0], opts.private_ips)
 
     if opts.user != "root":
+        print('Setting sshd PermitRootLogin yes')
         command = """
           sudo cp /home/{}/.ssh/authorized_keys /root/.ssh/ &&
           sudo sed -i 's/PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config &&
@@ -806,7 +807,6 @@ def setup_cluster(conn, master_nodes, slave_nodes, opts, deploy_ssh_key):
         for slave in slave_nodes:
             slave_address = get_dns_name(slave, opts.private_ips)
             ssh(slave_address, opts, command)
-        print('changed user to root')
         opts.user = "root"
  
     if deploy_ssh_key:
@@ -824,8 +824,9 @@ def setup_cluster(conn, master_nodes, slave_nodes, opts, deploy_ssh_key):
             print(slave_address)
             ssh_write(slave_address, opts, ['tar', 'x'], dot_ssh_tar)
 
-    modules = ['spark', 'ephemeral-hdfs', 'persistent-hdfs',
-               'mapreduce', 'spark-standalone', 'tachyon', 'rstudio']
+    # modules = ['spark', 'ephemeral-hdfs', 'persistent-hdfs',
+    #            'mapreduce', 'spark-standalone', 'tachyon', 'rstudio']
+    modules = ['spark', 'spark-standalone']
 
     if opts.hadoop_major_version == "1":
         modules = list(filter(lambda x: x != "mapreduce", modules))
